@@ -1,0 +1,16 @@
+[package]
+name = "apb-color-converter"
+description = "Convert any color to its APB: Reloaded counterpart."
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+authors = [ "biixie <no-reply@biixie.com>" ]
+
+[dependencies]
+dioxus = { version = "0.7.5", features = [ "logger" ] }
+wasm-bindgen = "=0.2.114"
+palette = "0.7.6"
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
