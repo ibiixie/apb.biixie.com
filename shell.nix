@@ -20,6 +20,7 @@ pkgs.mkShell {
 
     # Dioxus
     dioxus-cli
+    binaryen
 
     lld
   ];

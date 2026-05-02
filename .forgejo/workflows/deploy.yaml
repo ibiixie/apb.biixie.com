@@ -22,7 +22,7 @@ jobs:
         uses: https://github.com/nicknovitski/nix-develop@v1
 
       - name: Build site
-        run: dx bundle --out-dir dist
+        run: dx bundle --out-dir dist --release
 
       - name: Deploy site
         uses: https://github.com/cloudflare/wrangler-action@v3
