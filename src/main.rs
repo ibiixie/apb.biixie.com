@@ -2,8 +2,6 @@
 
 use dioxus::prelude::*;
 
-use dioxus::logger::tracing;
-
 mod components;
 use components::comparison_applet::ComparisonApplet;
 use components::footer::Footer;
@@ -21,40 +19,6 @@ fn main() {
 #[component]
 fn App() -> Element {
     let mut color = use_signal(|| None::<ColorWrapper>);
-
-    let original = ColorWrapper::from_apb(color::ApbColor {
-        hue: 18,
-        saturation: 7,
-        lightness: 3,
-    });
-
-    // let original = ColorWrapper::from_hex("#115778");
-
-    tracing::info!(
-        "After from_apb:  H={:.6} S={:.6} L={:.6}",
-        original.inner().hue.into_positive_degrees(),
-        original.inner().saturation,
-        original.inner().lightness
-    );
-
-    let hex = original.to_hex();
-    tracing::info!("Hex: {}", hex);
-
-    let roundtripped = ColorWrapper::from_hex(&hex);
-    tracing::info!(
-        "After roundtrip: H={:.6} S={:.6} L={:.6}",
-        roundtripped.inner().hue.into_positive_degrees(),
-        roundtripped.inner().saturation,
-        roundtripped.inner().lightness
-    );
-
-    let apb = roundtripped.to_apb();
-    tracing::info!(
-        "to_apb result: H={} S={} L={}",
-        apb.hue,
-        apb.saturation,
-        apb.lightness
-    );
 
     rsx! {
         title { "APB Color Converter" }

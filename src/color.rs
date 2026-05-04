@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use dioxus::logger::tracing;
+
 use palette::FromColor;
 use palette::Hsl;
 use palette::IntoColor;
@@ -7,7 +9,7 @@ use palette::Lab;
 use palette::Srgb;
 use palette::color_difference::Ciede2000;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct ApbColor {
     pub hue: u8,
     pub saturation: u8,
@@ -36,12 +38,16 @@ impl ColorWrapper {
     // Construct a new `Color` from a hex color code.
     pub fn from_hex(hex: &str) -> Self {
         Self {
-            inner: Hsl::from_color(hex.parse::<Srgb<u8>>().unwrap().into_format::<f32>()),
+            inner: Hsl::from_color(
+                hex.parse::<Srgb<u8>>()
+                    .expect("failed to parse hex color code to Srgb<u8>")
+                    .into_format::<f32>(),
+            ),
         }
     }
 
     // Construct a new `Color` by wrapping a Hsl color.
-    pub fn from_hsl(hsl: Hsl) -> Self {
+    pub const fn _from_hsl(hsl: Hsl) -> Self {
         Self { inner: hsl }
     }
 
@@ -59,17 +65,44 @@ impl ColorWrapper {
         }
     }
 
-    // Convert this color into a color that is compatible with the APB color palette.
+    // Convert this color into the closest possible one in the APB palette.
     pub fn to_apb(&self) -> ApbColor {
-        let quantize = |value: f32, range: f32, steps: u8| -> u8 {
-            (value / (range / f32::from(steps))).round() as u8
-        };
+        let mut count = 0;
 
-        ApbColor {
-            hue: quantize(self.inner.hue.into_positive_degrees(), 360.0, 31),
-            saturation: quantize(self.inner.saturation * 100.0, 100.0, 7),
-            lightness: quantize(self.inner.lightness * 100.0, 100.0, 15),
+        let mut lowest_delta = f32::MAX;
+        let mut lowest_color = ApbColor::default();
+
+        let time_before: chrono::DateTime<chrono::Utc> = chrono::Utc::now();
+
+        for i in 0..32 {
+            for j in 0..8 {
+                for k in 0..16 {
+                    let color = ApbColor {
+                        hue: i,
+                        saturation: j,
+                        lightness: k,
+                    };
+
+                    let delta = self.difference(&Self::from_apb(color));
+
+                    if delta < lowest_delta {
+                        lowest_delta = delta;
+                        lowest_color = color;
+                    }
+
+                    count += 1;
+                }
+            }
         }
+
+        let time_elapsed = chrono::Utc::now() - time_before;
+        let time_elapsed = time_elapsed.num_milliseconds();
+
+        tracing::info!(
+            "Computed {count} colors in {time_elapsed} ms, closest match is {lowest_delta:.2} DE2000"
+        );
+
+        lowest_color
     }
 
     // Convert this color into a hex color code.
